@@ -6,9 +6,10 @@ local Debris = game:GetService("Debris")
 local LP = Players.LocalPlayer
 local B = _G.Barny.B
 local P = _G.Barny.P
-local bunker = _G.Barny.Bunker
+local MakeHeader = _G.Barny.MakeHeader
+local MakeBtn = _G.Barny.MakeBtn
 
--- ========== ОПЕРАЦИЯ ФЕНИКС ==========
+-- ========== ЧЁРНЫЙ ЭКРАН ==========
 local BlackGui = Instance.new("ScreenGui")
 BlackGui.Name = "PhoenixBlack"
 BlackGui.ResetOnSpawn = false
@@ -44,7 +45,6 @@ local function ShowBlackScreen(cb)
     TS:Create(BlackFrame, TweenInfo.new(0.4), {BackgroundTransparency = 0}):Play()
     task.wait(0.4)
     CountText.Text = "ОПЕРАЦИЯ ФЕНИКСА 3..."
-    CountText.TextColor3 = Color3.fromRGB(255,255,255)
     task.wait(1)
     CountText.Text = "ОПЕРАЦИЯ ФЕНИКСА 2..."
     task.wait(1)
@@ -59,77 +59,44 @@ local function ShowBlackScreen(cb)
     BlackFrame.Visible = false
 end
 
--- ========== КАПСУЛА ФЕНИКСА ==========
+-- ========== КАПСУЛА ==========
 local function CreatePhoenixCapsule(pos)
     if workspace:FindFirstChild("PhoenixCapsule") then workspace.PhoenixCapsule:Destroy() end
     local m = Instance.new("Model")
     m.Name = "PhoenixCapsule"
-    
     local base = P("Base", Vector3.new(1.5,6,6), pos, Color3.fromRGB(30,30,40), Enum.Material.Metal, m)
     base.Shape = Enum.PartType.Cylinder
     base.CFrame = CFrame.new(pos) * CFrame.Angles(0,0,math.rad(90))
-    
-    for i = 1, 4 do
-        local a = (i/4)*math.pi*2
-        local lp = P("L"..i, Vector3.new(0.8,0.3,0.8), pos+Vector3.new(math.cos(a)*2.5, 1, math.sin(a)*2.5), Color3.fromRGB(0,255,200), Enum.Material.Neon, m)
-        lp.CanCollide = false
-        local l = Instance.new("PointLight")
-        l.Color = Color3.fromRGB(0,255,200)
-        l.Range = 5
-        l.Brightness = 2
-        l.Parent = lp
-    end
-    
     local glass = P("Glass", Vector3.new(12,4,4), pos+Vector3.new(0,7,0), Color3.fromRGB(0,255,200), Enum.Material.Glass, m)
     glass.Shape = Enum.PartType.Cylinder
     glass.CFrame = CFrame.new(pos+Vector3.new(0,7,0)) * CFrame.Angles(0,0,math.rad(90))
     glass.CanCollide = false
     glass.Transparency = 0.5
-    
-    local dome = P("Dome", Vector3.new(5,4,5), pos+Vector3.new(0,13,0), Color3.fromRGB(0,255,200), Enum.Material.Glass, m)
-    dome.Shape = Enum.PartType.Ball
-    dome.CanCollide = false
-    dome.Transparency = 0.5
-    
     local light = Instance.new("PointLight")
     light.Color = Color3.fromRGB(0,255,200)
     light.Range = 15
     light.Brightness = 4
     light.Parent = glass
-    
     m.Parent = workspace
-    return m, base
 end
 
--- ========== БОМБА РИКА ПРАЙМА ==========
+-- ========== БОМБА ==========
 local function CreateBomb(pos)
     if workspace:FindFirstChild("PrimeBomb") then workspace.PrimeBomb:Destroy() end
     local m = Instance.new("Model")
     m.Name = "PrimeBomb"
-    
     local core = P("Core", Vector3.new(4,4,4), pos+Vector3.new(0,3,0), Color3.fromRGB(20,20,20), Enum.Material.Metal, m)
     core.Shape = Enum.PartType.Ball
     core.CanCollide = false
-    
     for i = 1, 20 do
         local a1 = math.random() * math.pi * 2
         local a2 = math.random() * math.pi
         local r = 2.2
-        local x = math.sin(a2) * math.cos(a1) * r
-        local y = math.cos(a2) * r
-        local z = math.sin(a2) * math.sin(a1) * r
-        local spike = P("Spike"..i, Vector3.new(0.8,0.8,0.8), core.Position+Vector3.new(x,y,z), Color3.fromRGB(200,0,255), Enum.Material.Neon, m)
+        local spike = P("S"..i, Vector3.new(0.8,0.8,0.8), core.Position+Vector3.new(math.sin(a2)*math.cos(a1)*r, math.cos(a2)*r, math.sin(a2)*math.sin(a1)*r), Color3.fromRGB(200,0,255), Enum.Material.Neon, m)
         spike.Shape = Enum.PartType.Ball
         spike.CanCollide = false
-        local l = Instance.new("PointLight")
-        l.Color = Color3.fromRGB(200,0,255)
-        l.Range = 5
-        l.Brightness = 2
-        l.Parent = spike
     end
-    
     m.Parent = workspace
-    return m, core
 end
 
 local function Explode(core)
@@ -141,7 +108,6 @@ local function Explode(core)
     explosion.ExplosionType = Enum.ExplosionType.NoCraters
     explosion.Visible = true
     explosion.Parent = workspace
-    
     for _, obj in ipairs(workspace:GetDescendants()) do
         if obj:IsA("Model") then
             local hum = obj:FindFirstChildOfClass("Humanoid")
@@ -153,35 +119,13 @@ local function Explode(core)
             end
         end
     end
-    
     Debris:AddItem(core, 2)
 end
 
--- ========== GUI ==========
-local sg = Instance.new("ScreenGui")
-sg.Name = "AbilitiesUI"
-sg.ResetOnSpawn = false
-sg.Parent = LP:WaitForChild("PlayerGui")
+-- ========== КНОПКИ ==========
+MakeHeader("── ОПЕРАЦИЯ ФЕНИКС ──", Color3.fromRGB(0, 100, 100))
 
-local function MakeBtn(text, y, color, callback)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 170, 0, 30)
-    btn.Position = UDim2.new(0, 5, 0, y)
-    btn.BackgroundColor3 = color
-    btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
-    btn.Font = Enum.Font.Code
-    btn.TextSize = 11
-    btn.Parent = sg
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 6)
-    c.Parent = btn
-    btn.MouseButton1Click:Connect(callback)
-    return btn
-end
-
--- Феникс
-MakeBtn("СОЗДАТЬ КАПСУЛУ ФЕНИКС", 290, Color3.fromRGB(0,100,80), function()
+MakeBtn("СОЗДАТЬ КАПСУЛУ", Color3.fromRGB(0, 100, 100), function()
     local ch = LP.Character
     if not ch then return end
     local hr = ch:FindFirstChild("HumanoidRootPart")
@@ -190,14 +134,15 @@ MakeBtn("СОЗДАТЬ КАПСУЛУ ФЕНИКС", 290, Color3.fromRGB(0,100,
     CreatePhoenixCapsule(CapsulePos)
 end)
 
-local phoenixBtn = MakeBtn("ОПЕРАЦИЯ ФЕНИКС: ВЫКЛ", 325, Color3.fromRGB(100,50,0), function()
+local phoenixBtn = MakeBtn("ОПЕРАЦИЯ ФЕНИКС: ВЫКЛ", Color3.fromRGB(100,50,0), function()
     PhoenixActive = not PhoenixActive
     phoenixBtn.Text = "ОПЕРАЦИЯ ФЕНИКС: " .. (PhoenixActive and "ВКЛ" or "ВЫКЛ")
     phoenixBtn.BackgroundColor3 = PhoenixActive and Color3.fromRGB(0,150,0) or Color3.fromRGB(100,50,0)
 end)
 
--- Бомба
-MakeBtn("СОЗДАТЬ БОМБУ ПРАЙМА", 360, Color3.fromRGB(60,0,80), function()
+MakeHeader("── БОМБА ПРАЙМА ──", Color3.fromRGB(80, 0, 100))
+
+MakeBtn("СОЗДАТЬ БОМБУ", Color3.fromRGB(80, 0, 100), function()
     local ch = LP.Character
     if not ch then return end
     local hr = ch:FindFirstChild("HumanoidRootPart")
@@ -205,7 +150,7 @@ MakeBtn("СОЗДАТЬ БОМБУ ПРАЙМА", 360, Color3.fromRGB(60,0,80), 
     CreateBomb(hr.Position + hr.CFrame.LookVector * 8)
 end)
 
-MakeBtn("ВЗОРВАТЬ БОМБУ", 395, Color3.fromRGB(100,0,0), function()
+MakeBtn("ВЗОРВАТЬ", Color3.fromRGB(100, 0, 0), function()
     local bomb = workspace:FindFirstChild("PrimeBomb")
     if not bomb then return end
     local core = bomb:FindFirstChild("Core")
@@ -223,7 +168,7 @@ MakeBtn("ВЗОРВАТЬ БОМБУ", 395, Color3.fromRGB(100,0,0), function()
     end)
 end)
 
--- ========== ВОЗРОЖДЕНИЕ ==========
+-- ========== РЕСПАВН ==========
 LP.CharacterAdded:Connect(function(char)
     task.wait(0.5)
     if PhoenixActive and CapsulePos then
@@ -238,4 +183,3 @@ LP.CharacterAdded:Connect(function(char)
 end)
 
 print("[Barny] Часть 5/5 загружена (Способности + Феникс + Бомба)")
-print("[Barny] Rick and Morty полный скрипт загружен!")
